@@ -7,7 +7,9 @@ import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -28,7 +32,10 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    TextView text;
+    ListView listView;
+
+    private ArrayAdapter<String> adapter;
+    private List<String> dataList = new ArrayList<>();
     Button btn;
 
     @Override
@@ -36,8 +43,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        text = findViewById(R.id.text);
+        listView = findViewById(R.id.listView);
         btn = findViewById(R.id.btn);
+
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, dataList);
+        listView.setAdapter(adapter);
 
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -114,34 +124,28 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(JSONObject response) {
             if (response != null) {
                 try {
-                    JSONObject data = response.getJSONObject("data");
-                    String date = data.getString("date");
-                    String month = data.getString("month");
-                    String year = data.getString("year");
-                    String day = data.getString("day");
+                    dataList.clear();
+                    dataList.add("Date: " + response.getJSONObject("data").getString("date"));
+                    dataList.add("Month: " + response.getJSONObject("data").getString("month"));
+                    dataList.add("Year: " + response.getJSONObject("data").getString("year"));
+                    dataList.add("Day: " + response.getJSONObject("data").getString("day"));
+                    dataList.add("Sunrise: " + response.getJSONObject("data").getJSONObject("sun").getString("sunrise"));
+                    dataList.add("Sunset: " + response.getJSONObject("data").getJSONObject("sun").getString("sunset"));
+                    dataList.add("Ayana Number: " + response.getJSONObject("data").getJSONObject("ayana").getString("ayana_number"));
+                    dataList.add("Ayana Name: " + response.getJSONObject("data").getJSONObject("ayana").getString("ayana_name"));
+                    dataList.add("Meaning: " + response.getJSONObject("data").getJSONObject("ayana").getString("meaning"));
 
-                    JSONObject sun = data.getJSONObject("sun");
-                    String sunrise = sun.getString("sunrise");
-                    String sunset = sun.getString("sunset");
 
-                    JSONObject ayana = data.getJSONObject("ayana");
-                    String ayana_number = ayana.getString("ayana_number");
-                    String ayana_name = ayana.getString("ayana_name");
-                    String meaning = ayana.getString("meaning");
 
-                    // Update your TextView with the extracted data.
-                    String displayText = "Date: " + date + "\nMonth: " + month + "\nYear: " + year +
-                            "\nDay: " + day + "\nSunrise: " + sunrise + "\nSunset: " + sunset + "\n \n \n ayana_number: " + ayana_number + "\nayana_name: " + ayana_name + "\nmeaning: " + meaning;
-                    text.setText(displayText);
+                    // Notify the adapter that the data has changed
+                    adapter.notifyDataSetChanged();
 
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    text.setText("Error parsing JSON");
+                    Toast.makeText(MainActivity.this, "Error parsing JSON", Toast.LENGTH_SHORT).show();
                 }
             } else {
-                //Log.e("ApiRequest", "Failed to fetch data.");
-                text.setText("Error...");
-                // Handle the error here
+                Toast.makeText(MainActivity.this, "Error...", Toast.LENGTH_SHORT).show();
             }
         }
     }
